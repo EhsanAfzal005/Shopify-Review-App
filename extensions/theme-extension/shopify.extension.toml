@@ -1,0 +1,13 @@
+api_version = "2024-01"
+
+[[extensions]]
+
+uid = "3da5f728-520a-de66-9452-dfbd9b732ec89533f7cf"
+
+type = "theme_app_extension"
+name = "Customer Reviews"
+handle = "customer-reviews"
+
+[extensions.capabilities]
+block_progress = true
+network_access = true
