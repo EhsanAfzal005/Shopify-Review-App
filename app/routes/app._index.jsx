@@ -1,4 +1,5 @@
-import { redirect } from "@remix-run/node";
+import { useEffect } from "react";
+import { useNavigate } from "@remix-run/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { authenticate } from "../shopify.server";
 
@@ -7,12 +8,16 @@ export const headers = (headersArgs) => {
 };
 
 export const loader = async ({ request }) => {
-  const url = new URL(request.url);
-  console.log("App Index Request URL:", request.url);
   await authenticate.admin(request);
-  return redirect(`/app/dashboard${url.search}`);
+  return null;
 };
 
 export default function Index() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate("/app/dashboard", { replace: true });
+  }, [navigate]);
+
   return null;
 }

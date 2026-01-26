@@ -63,7 +63,7 @@ export default function Auth() {
                   style={{
                     textDecoration: "none",
                     padding: "0.5rem 1rem",
-                    background: "#008060",
+                    background: "#D32F2F",
                     color: "white",
                     borderRadius: "4px",
                   }}

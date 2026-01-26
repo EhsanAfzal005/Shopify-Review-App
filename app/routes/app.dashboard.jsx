@@ -18,7 +18,17 @@ import {
     TextField,
     FormLayout,
     InlineStack,
+    Thumbnail,
+    Tooltip as PolarisTooltip, // Alias to avoid conflict with Recharts Tooltip
+    Icon,
 } from "@shopify/polaris";
+import {
+    CheckIcon,
+    ChatIcon,
+    DeleteIcon,
+    ProductIcon,
+    ImageIcon
+} from "@shopify/polaris-icons";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { useLoaderData, useSubmit, useNavigate, Link } from "@remix-run/react";
 import { useState, useEffect, useCallback } from "react";
@@ -182,6 +192,8 @@ export const loader = async ({ request }) => {
         return {
             ...review,
             productTitle: details.title,
+            productImage: details.image,
+            photos: review.photos || [],
             createdAt: review.createdAt.toISOString(),
             updatedAt: review.updatedAt.toISOString(),
         }
@@ -304,67 +316,101 @@ export default function Dashboard() {
                 selected={selectedResources.includes(review.id)}
                 position={index}
             >
+                {/* Product Column */}
                 <IndexTable.Cell>
-                    <div style={{ minWidth: "160px", maxWidth: "200px" }}>
-                        <Text variant="bodyMd" fontWeight="bold" truncate as="span">
-                            {review.productTitle}
-                        </Text>
-                    </div>
+                    <InlineStack gap="300" wrap={false} blockAlign="center">
+                        <Thumbnail
+                            source={review.productImage || ProductIcon}
+                            alt={review.productTitle}
+                            size="small"
+                        />
+                        <div style={{ maxWidth: "150px" }}>
+                            <Text variant="bodySm" fontWeight="bold" truncate>
+                                {review.productTitle}
+                            </Text>
+                        </div>
+                    </InlineStack>
                 </IndexTable.Cell>
+
+                {/* Rating & Review Column */}
                 <IndexTable.Cell>
-                    <div style={{ minWidth: "80px" }}>
-                        <Text as="span" variant="bodyMd">{(review.rating || 0)} ★</Text>
-                    </div>
+                    <BlockStack gap="100">
+                        <div style={{ display: 'flex', gap: '1px' }}>
+                            {[1, 2, 3, 4, 5].map(star => (
+                                <span key={star} style={{ color: star <= review.rating ? '#D32F2F' : '#E0E0E0', fontSize: '14px' }}>★</span>
+                            ))}
+                        </div>
+                        <div style={{ maxWidth: "250px" }}>
+                            <Text as="p" variant="bodyMd" truncate>
+                                {review.comment}
+                            </Text>
+                            {review.reply && (
+                                <Text as="span" variant="bodyXs" tone="subdued">
+                                    ↩ Replied
+                                </Text>
+                            )}
+                        </div>
+                    </BlockStack>
                 </IndexTable.Cell>
+
+                {/* Customer Column */}
                 <IndexTable.Cell>
-                    <div style={{ maxWidth: "300px", minWidth: "200px" }}>
-                        <Text as="p" truncate>{review.comment}</Text>
-                    </div>
-                </IndexTable.Cell>
-                <IndexTable.Cell>
-                    <div style={{ minWidth: "170px" }}>
+                    <InlineStack gap="300" wrap={false} blockAlign="center">
+                        <div style={{
+                            width: '32px', height: '32px', borderRadius: '50%',
+                            backgroundColor: '#FFEBEE', color: '#D32F2F',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '12px', fontWeight: 'bold', border: '1px solid #FFCDD2'
+                        }}>
+                            {(review.username || "A").charAt(0).toUpperCase()}
+                        </div>
                         <BlockStack gap="0">
-                            <Text variant="bodyMd" fontWeight="semibold" truncate>{review.username}</Text>
-                            <Text variant="bodySm" tone="subdued" truncate>{review.userEmail}</Text>
-                        </BlockStack>
-                    </div>
-                </IndexTable.Cell>
-                <IndexTable.Cell>
-                    <div style={{ minWidth: "140px" }}>
-                        <BlockStack gap="0">
-                            <Text as="span" variant="bodyMd">{new Date(review.createdAt).toLocaleDateString()}</Text>
-                            {review.approved ? (
-                                <Badge tone="success" size="small">Approved</Badge>
-                            ) : (
-                                <Badge tone="warning" size="small">Pending</Badge>
+                            <Text variant="bodySm" fontWeight="semibold" truncate>{review.username}</Text>
+                            {review.orderId && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                    <Icon source={CheckIcon} tone="success" />
+                                    <Text variant="bodyXs" tone="success">Verified</Text>
+                                </div>
                             )}
                         </BlockStack>
-                    </div>
+                    </InlineStack>
                 </IndexTable.Cell>
+
+                {/* Date & Status Column */}
                 <IndexTable.Cell>
-                    <div style={{ minWidth: "180px" }}>
-                        <InlineStack gap="200" wrap={false}>
-                            <Button size="slim" onClick={() => openReplyModal(review)}>
-                                {review.reply ? "Edit" : "Reply"}
-                            </Button>
-                            {!review.approved && (
-                                <Button size="slim" variant="primary" onClick={() => handleApprove(review.id)}>Approve</Button>
-                            )}
-                            <Button size="slim" tone="critical" onClick={() => handleDelete(review.id)}>Del</Button>
-                        </InlineStack>
-                    </div>
+                    <BlockStack gap="200">
+                        <Text as="span" variant="bodySm" tone="subdued">{new Date(review.createdAt).toLocaleDateString()}</Text>
+                        {review.approved ? (
+                            <Badge tone="success" size="small">Published</Badge>
+                        ) : (
+                            <Badge tone="attention" size="small">Pending</Badge>
+                        )}
+                    </BlockStack>
+                </IndexTable.Cell>
+
+                {/* Actions Column */}
+                <IndexTable.Cell>
+                    <InlineStack gap="200" wrap={false}>
+                        <PolarisTooltip content={review.reply ? "Edit Reply" : "Reply"}>
+                            <Button icon={ChatIcon} onClick={() => openReplyModal(review)} size="slim" />
+                        </PolarisTooltip>
+
+                        {!review.approved && (
+                            <PolarisTooltip content="Approve">
+                                <Button icon={CheckIcon} tone="success" onClick={() => handleApprove(review.id)} size="slim" />
+                            </PolarisTooltip>
+                        )}
+
+                        <PolarisTooltip content="Delete">
+                            <Button icon={DeleteIcon} tone="critical" onClick={() => handleDelete(review.id)} size="slim" />
+                        </PolarisTooltip>
+                    </InlineStack>
                 </IndexTable.Cell>
             </IndexTable.Row>
         ),
     );
 
     const totalForDist = Object.values(distribution).reduce((a, b) => a + b, 0) || 1;
-
-    // Custom "Circular Progress" using SVG for Response Rate
-    const radius = 30;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (responseRate / 100) * circumference;
-    const strokeColor = responseRate >= 80 ? "#108043" : responseRate >= 50 ? "#E4A300" : "#D72C0D";
 
     return (
         <Page fullWidth>
@@ -407,38 +453,92 @@ export default function Dashboard() {
                 <Layout>
                     <Layout.Section>
                         <InlineGrid columns={{ xs: 1, sm: 2, md: 4 }} gap="400">
-                            {stats.map((stat, index) => (
-                                <Card key={index}>
-                                    <BlockStack gap="200">
-                                        <Text as="h3" variant="headingSm" tone="subdued">
-                                            {stat.label}
-                                        </Text>
-                                        <Text as="p" variant="heading2xl">
-                                            {stat.value}
-                                        </Text>
+                            {/* Total Reviews Card */}
+                            <Card>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        backgroundColor: '#FFEBEE',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <span style={{ fontSize: '24px' }}>📝</span>
+                                    </div>
+                                    <BlockStack gap="100">
+                                        <Text as="h3" variant="bodySm" tone="subdued">Total Reviews</Text>
+                                        <Text as="p" variant="heading2xl" fontWeight="bold">{stats[0].value}</Text>
                                     </BlockStack>
-                                </Card>
-                            ))}
+                                </div>
+                            </Card>
+
+                            {/* Average Rating Card */}
+                            <Card>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        backgroundColor: '#FFEBEE',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <span style={{ fontSize: '24px', color: '#D32F2F' }}>★</span>
+                                    </div>
+                                    <BlockStack gap="100">
+                                        <Text as="h3" variant="bodySm" tone="subdued">Average Rating</Text>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                                            <Text as="span" variant="heading2xl" fontWeight="bold" style={{ color: '#D32F2F' }}>{stats[1].value}</Text>
+                                            <Text as="span" variant="bodySm" tone="subdued">/5</Text>
+                                        </div>
+                                    </BlockStack>
+                                </div>
+                            </Card>
+
+                            {/* Pending Reviews Card */}
+                            <Card>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{
+                                        width: '48px',
+                                        height: '48px',
+                                        backgroundColor: '#FFEBEE',
+                                        borderRadius: '12px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <span style={{ fontSize: '24px' }}>⏳</span>
+                                    </div>
+                                    <BlockStack gap="100">
+                                        <Text as="h3" variant="bodySm" tone="subdued">Pending Reviews</Text>
+                                        <Text as="p" variant="heading2xl" fontWeight="bold">{stats[2].value}</Text>
+                                    </BlockStack>
+                                </div>
+                            </Card>
+
                             {/* Response Rate Card */}
                             <Card>
-                                <InlineGrid columns="auto 1fr" gap="400" alignItems="center">
-                                    <div style={{ position: "relative", width: "70px", height: "70px" }}>
-                                        <svg width="70" height="70" viewBox="0 0 70 70">
-                                            <circle cx="35" cy="35" r={radius} stroke="#e1e3e5" strokeWidth="6" fill="none" />
-                                            <circle cx="35" cy="35" r={radius} stroke={strokeColor} strokeWidth="6" fill="none"
-                                                strokeDasharray={circumference}
-                                                strokeDashoffset={offset}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ position: "relative", width: "56px", height: "56px" }}>
+                                        <svg width="56" height="56" viewBox="0 0 56 56">
+                                            <circle cx="28" cy="28" r="24" stroke="#FFEBEE" strokeWidth="5" fill="none" />
+                                            <circle cx="28" cy="28" r="24" stroke="#D32F2F" strokeWidth="5" fill="none"
+                                                strokeDasharray={2 * Math.PI * 24}
+                                                strokeDashoffset={(2 * Math.PI * 24) - (responseRate / 100) * (2 * Math.PI * 24)}
                                                 strokeLinecap="round"
-                                                transform="rotate(-90 35 35)"
+                                                transform="rotate(-90 28 28)"
                                             />
-                                            <text x="50%" y="54%" textAnchor="middle" fontSize="14" fill="#333" fontWeight="bold">{responseRate}%</text>
+                                            <text x="50%" y="54%" textAnchor="middle" fontSize="11" fill="#D32F2F" fontWeight="bold">{responseRate}%</text>
                                         </svg>
                                     </div>
-                                    <BlockStack gap="200">
-                                        <Text as="h3" variant="headingSm" tone="subdued">Response Rate</Text>
+                                    <BlockStack gap="100">
+                                        <Text as="h3" variant="bodySm" tone="subdued">Response Rate</Text>
                                         <Text as="p" variant="bodySm" tone="subdued">Target: 80%</Text>
                                     </BlockStack>
-                                </InlineGrid>
+                                </div>
                             </Card>
                         </InlineGrid>
                     </Layout.Section>
@@ -449,19 +549,41 @@ export default function Dashboard() {
                     <Layout.Section variant="twoThirds">
                         <Card>
                             <BlockStack gap="400">
-                                <Text as="h2" variant="headingMd">Reviews Growth (30 Days)</Text>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Text as="h2" variant="headingMd" fontWeight="bold">Reviews Growth (30 Days)</Text>
+                                    <span style={{
+                                        backgroundColor: '#FFEBEE',
+                                        color: '#D32F2F',
+                                        padding: '4px 12px',
+                                        borderRadius: '16px',
+                                        fontSize: '12px',
+                                        fontWeight: '600'
+                                    }}>📈 Trend</span>
+                                </div>
                                 <div style={{ height: "300px", width: "100%" }}>
                                     {mounted ? (
                                         <ResponsiveContainer width="100%" height="100%">
                                             <LineChart data={reviewsOverTime}>
-                                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#FFEBEE" />
                                                 <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#666' }} minTickGap={30} />
                                                 <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: '#666' }} allowDecimals={false} />
                                                 <Tooltip
-                                                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-                                                    cursor={{ stroke: '#ddd', strokeWidth: 1 }}
+                                                    contentStyle={{
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #FFCDD2',
+                                                        boxShadow: '0 4px 12px rgba(211, 47, 47, 0.15)',
+                                                        backgroundColor: '#fff'
+                                                    }}
+                                                    cursor={{ stroke: '#FFCDD2', strokeWidth: 1 }}
                                                 />
-                                                <Line type="monotone" dataKey="count" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                                                <Line
+                                                    type="monotone"
+                                                    dataKey="count"
+                                                    stroke="#D32F2F"
+                                                    strokeWidth={3}
+                                                    dot={{ r: 5, fill: '#fff', stroke: '#D32F2F', strokeWidth: 2 }}
+                                                    activeDot={{ r: 7, fill: '#D32F2F', stroke: '#fff', strokeWidth: 2 }}
+                                                />
                                             </LineChart>
                                         </ResponsiveContainer>
                                     ) : (
@@ -479,18 +601,37 @@ export default function Dashboard() {
                             {/* Distribution */}
                             <Card>
                                 <BlockStack gap="400">
-                                    <Text as="h2" variant="headingMd">Rating Distribution</Text>
+                                    <Text as="h2" variant="headingMd" fontWeight="bold">Rating Distribution</Text>
                                     <BlockStack gap="300">
                                         {[5, 4, 3, 2, 1].map(stars => {
                                             const count = distribution[stars];
                                             const percent = (count / totalForDist) * 100;
                                             return (
-                                                <div key={stars}>
-                                                    <InlineGrid columns="auto 1fr auto" gap="300" alignItems="center">
-                                                        <Text tone="subdued" width="40px">{stars} ★</Text>
-                                                        <ProgressBar progress={percent} size="small" tone={stars >= 4 ? "success" : stars === 3 ? "highlight" : "critical"} />
-                                                        <Text tone="subdued" width="30px">{count}</Text>
-                                                    </InlineGrid>
+                                                <div key={stars} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{ display: 'flex', gap: '2px', minWidth: '90px' }}>
+                                                        {[1, 2, 3, 4, 5].map(i => (
+                                                            <span key={i} style={{
+                                                                color: i <= stars ? '#D32F2F' : '#E0E0E0',
+                                                                fontSize: '14px'
+                                                            }}>★</span>
+                                                        ))}
+                                                    </div>
+                                                    <div style={{
+                                                        flex: 1,
+                                                        height: '10px',
+                                                        backgroundColor: '#FFEBEE',
+                                                        borderRadius: '5px',
+                                                        overflow: 'hidden'
+                                                    }}>
+                                                        <div style={{
+                                                            width: `${percent}%`,
+                                                            height: '100%',
+                                                            background: 'linear-gradient(90deg, #EF5350, #D32F2F)',
+                                                            borderRadius: '5px',
+                                                            transition: 'width 0.3s ease'
+                                                        }} />
+                                                    </div>
+                                                    <Text tone="subdued" variant="bodySm" style={{ minWidth: '30px', textAlign: 'right' }}>{count}</Text>
                                                 </div>
                                             );
                                         })}
@@ -498,20 +639,46 @@ export default function Dashboard() {
                                 </BlockStack>
                             </Card>
 
-                            {/* Top Products */}
                             <Card>
                                 <BlockStack gap="400">
-                                    <Text as="h2" variant="headingMd">Top Products</Text>
+                                    <Text as="h2" variant="headingMd" fontWeight="bold">Top Reviewed Products</Text>
                                     <BlockStack gap="300">
                                         {topProducts.length > 0 ? (
                                             topProducts.map((prod, idx) => (
-                                                <div key={idx}>
-                                                    <InlineGrid columns="1fr auto" gap="200" alignItems="center">
+                                                <div key={idx} style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    padding: '8px 12px',
+                                                    backgroundColor: idx === 0 ? '#FFEBEE' : 'transparent',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #FFCDD2'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <span style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            width: '24px',
+                                                            height: '24px',
+                                                            backgroundColor: idx === 0 ? '#D32F2F' : '#FFCDD2',
+                                                            color: idx === 0 ? '#fff' : '#B71C1C',
+                                                            borderRadius: '50%',
+                                                            fontSize: '12px',
+                                                            fontWeight: 'bold'
+                                                        }}>{idx + 1}</span>
                                                         <Text variant="bodyMd" fontWeight="semibold" truncate>
                                                             {prod.title}
                                                         </Text>
-                                                        <Badge>{prod.count} reviews</Badge>
-                                                    </InlineGrid>
+                                                    </div>
+                                                    <span style={{
+                                                        backgroundColor: '#D32F2F',
+                                                        color: '#fff',
+                                                        padding: '4px 10px',
+                                                        borderRadius: '12px',
+                                                        fontSize: '12px',
+                                                        fontWeight: '600'
+                                                    }}>{prod.count} reviews</span>
                                                 </div>
                                             ))
                                         ) : (
@@ -576,7 +743,19 @@ export default function Dashboard() {
                                                     <IndexTable.Cell>
                                                         <div style={{ maxWidth: "300px" }}>
                                                             <BlockStack gap="100">
-                                                                <Text as="span" variant="bodyMd" fontWeight="bold">{(review.rating || 0)} ★</Text>
+                                                                <InlineStack gap="200" blockAlign="center">
+                                                                    <Text as="span" variant="bodyMd" fontWeight="bold">{(review.rating || 0)} ★</Text>
+                                                                    {review.photos && review.photos.length > 0 && (
+                                                                        <PolarisTooltip content={`${review.photos.length} photo${review.photos.length > 1 ? 's' : ''}`}>
+                                                                            <Badge tone="info" size="small">
+                                                                                <InlineStack gap="100" blockAlign="center">
+                                                                                    <Icon source={ImageIcon} />
+                                                                                    <span>{review.photos.length}</span>
+                                                                                </InlineStack>
+                                                                            </Badge>
+                                                                        </PolarisTooltip>
+                                                                    )}
+                                                                </InlineStack>
                                                                 <Link to={`/app/review/${review.id}`} style={{ textDecoration: "none", color: "inherit" }}>
                                                                     <BlockStack gap="050">
                                                                         <Text as="p" truncate>{review.comment}</Text>

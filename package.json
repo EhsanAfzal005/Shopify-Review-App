@@ -1,6 +1,7 @@
 {
   "name": "mean3-review-app",
   "private": true,
+  "description": "A full-stack Shopify Application built with Remix, Prisma, and MongoDB for managing product reviews.",
   "scripts": {
     "build": "remix vite:build",
     "dev": "shopify app dev",

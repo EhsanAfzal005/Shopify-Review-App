@@ -189,6 +189,41 @@ export default function ReviewDetail() {
                                 </BlockStack>
                             </Box>
 
+                            {review.photos && review.photos.length > 0 && (
+                                <Box paddingBlockStart="400">
+                                    <BlockStack gap="300">
+                                        <Text variant="headingMd" as="h2">Photos ({review.photos.length})</Text>
+                                        <InlineStack gap="300" wrap>
+                                            {review.photos.map((photo, index) => (
+                                                <Box
+                                                    key={index}
+                                                    padding="0"
+                                                    borderColor="border"
+                                                    borderWidth="025"
+                                                    borderRadius="200"
+                                                    overflowX="hidden"
+                                                    overflowY="hidden"
+                                                >
+                                                    <a href={photo} target="_blank" rel="noopener noreferrer">
+                                                        <img
+                                                            src={photo}
+                                                            alt={`Review photo ${index + 1}`}
+                                                            style={{
+                                                                width: '120px',
+                                                                height: '120px',
+                                                                objectFit: 'cover',
+                                                                cursor: 'pointer',
+                                                                display: 'block'
+                                                            }}
+                                                        />
+                                                    </a>
+                                                </Box>
+                                            ))}
+                                        </InlineStack>
+                                    </BlockStack>
+                                </Box>
+                            )}
+
                             <Box paddingBlockStart="400" borderColor="border-subdued" borderBlockStartWidth="025">
                                 <FormLayout>
                                     <TextField

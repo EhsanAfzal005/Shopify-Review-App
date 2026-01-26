@@ -7,17 +7,23 @@ import { authenticate } from "../shopify.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
+import polarisTranslations from "@shopify/polaris/locales/en.json";
+
 export const loader = async ({ request }) => {
   await authenticate.admin(request);
 
-  return { apiKey: process.env.SHOPIFY_API_KEY || "" };
+  return { apiKey: process.env.SHOPIFY_API_KEY || "", polarisTranslations };
 };
 
 export default function App() {
-  const { apiKey } = useLoaderData();
+  const { apiKey, polarisTranslations } = useLoaderData();
 
   return (
-    <AppProvider isEmbeddedApp apiKey={apiKey}>
+    <AppProvider
+      isEmbeddedApp
+      apiKey={apiKey}
+      i18n={polarisTranslations}
+    >
       <NavMenu>
         <Link to="/app" rel="home">
           Home

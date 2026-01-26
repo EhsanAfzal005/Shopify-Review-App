@@ -1,5 +1,21 @@
 <div id="mean3-reviews-container" data-product-id="{{ product.id }}">
   <h2>Customer Reviews</h2>
+  
+  <!-- Summary Bar (populated by JS) -->
+  <div id="mean3-summary-bar" class="mean3-summary-bar" style="display: none;">
+    <div class="mean3-summary-left">
+      <div class="mean3-summary-rating">
+        <span class="mean3-big-rating">0.0</span>
+        <span class="mean3-out-of">/5</span>
+      </div>
+      <div class="mean3-summary-stars"></div>
+      <div class="mean3-summary-count">Based on <span>0</span> reviews</div>
+    </div>
+    <div class="mean3-summary-right">
+      <div class="mean3-distribution"></div>
+    </div>
+  </div>
+
   <div id="mean3-reviews-list">
     <p>Loading reviews...</p>
   </div>
@@ -8,16 +24,19 @@
     <h3>Write a Review</h3>
     <form id="mean3-review-form">
       <input type="hidden" name="productId" value="{{ product.id }}">
+      <input type="hidden" name="rating" id="rating-value" value="5">
       
+      <!-- Interactive Star Picker -->
       <div class="form-group">
-        <label for="rating">Rating</label>
-        <select name="rating" id="rating" required>
-          <option value="5">5 Stars</option>
-          <option value="4">4 Stars</option>
-          <option value="3">3 Stars</option>
-          <option value="2">2 Stars</option>
-          <option value="1">1 Star</option>
-        </select>
+        <label>Rating</label>
+        <div class="mean3-star-picker" id="star-picker">
+          <span class="star" data-rating="1">★</span>
+          <span class="star" data-rating="2">★</span>
+          <span class="star" data-rating="3">★</span>
+          <span class="star" data-rating="4">★</span>
+          <span class="star" data-rating="5">★</span>
+        </div>
+        <span class="mean3-rating-text" id="rating-text">Excellent</span>
       </div>
       
       <div class="form-group">
@@ -34,11 +53,28 @@
         <label for="comment">Review</label>
         <textarea name="comment" id="comment" required placeholder="Share your experience"></textarea>
       </div>
+
+      <!-- Photo Upload -->
+      <div class="form-group">
+        <label for="photos">Add Photos (optional)</label>
+        <div class="mean3-photo-upload">
+          <input type="file" id="photos" accept="image/*" multiple style="display: none;">
+          <button type="button" class="mean3-upload-btn" id="photo-btn">📷 Add Photos</button>
+          <span class="mean3-photo-hint">Up to 5 photos, max 2MB each</span>
+        </div>
+        <div class="mean3-photo-preview" id="photo-preview"></div>
+      </div>
       
       <button type="submit">Submit Review</button>
     </form>
     <div id="mean3-form-message"></div>
   </div>
+</div>
+
+<!-- Photo Lightbox Modal -->
+<div id="mean3-lightbox" class="mean3-lightbox" style="display: none;">
+  <span class="mean3-lightbox-close">&times;</span>
+  <img id="mean3-lightbox-img" src="" alt="Full size photo">
 </div>
 
 <script src="{{ 'reviews.js' | asset_url }}" defer></script>
@@ -69,7 +105,7 @@
       "type": "color",
       "id": "button_bg",
       "label": "Button Background Color",
-      "default": "#000000"
+      "default": "#D32F2F"
     },
     {
       "type": "color",
@@ -87,7 +123,7 @@
       "type": "color",
       "id": "primary_color",
       "label": "Primary/Accent Color",
-      "default": "#000000"
+      "default": "#D32F2F"
     }
   ]
 }

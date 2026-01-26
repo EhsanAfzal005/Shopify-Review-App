@@ -39,6 +39,7 @@ model Review {
   userEmail   String
   rating      Int
   comment     String
+  photos      String[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   approved    Boolean  @default(false)
